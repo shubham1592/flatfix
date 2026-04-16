@@ -47,7 +47,10 @@ export default function SmartComposer({ open, onClose, onCreated }) {
     try {
       // Call Supabase Edge Function that calls Gemini
       const { data, error } = await supabase.functions.invoke('parse-fix', {
-        body: { text: input }
+        body: { text: input },
+        headers: {
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        }
       })
 
       if (error) throw error

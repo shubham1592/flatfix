@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream-100 text-gray-800 font-sans antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .dark body {
+    @apply bg-dark-bg text-dark-text;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-cutest p-4 shadow-soft border border-cream-200/60 transition-all duration-200;
+  }
+
+  .dark .card {
+    @apply bg-dark-card border-dark-border;
+  }
+
+  .btn-primary {
+    @apply bg-blush-400 hover:bg-blush-500 text-white font-semibold
+           py-3 px-6 rounded-full transition-all duration-200
+           active:scale-95 shadow-soft hover:shadow-soft-md;
+  }
+
+  .btn-secondary {
+    @apply bg-mint-200 hover:bg-mint-300 text-mint-500 font-semibold
+           py-3 px-6 rounded-full transition-all duration-200
+           active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent hover:bg-cream-200 text-gray-600 font-medium
+           py-2 px-4 rounded-full transition-all duration-200
+           active:scale-95;
+  }
+
+  .dark .btn-ghost {
+    @apply hover:bg-dark-border text-dark-muted;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-low { @apply bg-mint-100 text-mint-500; }
+  .badge-medium { @apply bg-yellow-100 text-yellow-600; }
+  .badge-high { @apply bg-orange-100 text-orange-500; }
+  .badge-urgent { @apply bg-red-100 text-red-500 animate-pulse-soft; }
+
+  .input {
+    @apply w-full bg-cream-50 border border-cream-300 rounded-cute px-4 py-3
+           text-gray-700 placeholder:text-gray-400 focus:outline-none
+           focus:ring-2 focus:ring-blush-300 focus:border-blush-300
+           transition-all duration-200;
+  }
+
+  .dark .input {
+    @apply bg-dark-bg border-dark-border text-dark-text placeholder:text-dark-muted
+           focus:ring-blush-500 focus:border-blush-500;
+  }
+
+  .page-container {
+    @apply max-w-lg mx-auto px-4 pb-24 pt-4;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-gray-800 mb-1;
+  }
+
+  .dark .page-title {
+    @apply text-dark-text;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-gray-500 mb-6;
+  }
+
+  .dark .page-subtitle {
+    @apply text-dark-muted;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

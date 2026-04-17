@@ -1,11 +1,6 @@
-// supabase/functions/parse-fix/index.ts
-// Deploy with: supabase functions deploy parse-fix
-// Set secret: supabase secrets set GEMINI_API_KEY=your_key_here
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,11 +14,20 @@ serve(async (req) => {
 
   try {
     const { text } = await req.json()
+    console.log("Received text:", text)
 
     if (!text || text.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: "No text provided" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
+    if (!GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY is not set")
+      return new Response(
+        JSON.stringify({ error: "API key not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
 
@@ -43,14 +47,21 @@ Return this exact JSON structure:
 }
 
 Urgency guidelines:
-- 1 (low): Nice-to-have, no time pressure. Example: "we should reorganize the pantry sometime"
-- 2 (medium): Should be done today or tomorrow. Example: "we're running low on dish soap"
-- 3 (high): Needs attention within a few hours. Example: "the kitchen trash is full and starting to smell"
-- 4 (urgent): Needs immediate attention. Example: "there's water leaking under the sink"`
+- 1 (low): Nice-to-have, no time pressure
+- 2 (medium): Should be done today or tomorrow
+- 3 (high): Needs attention within a few hours
+- 4 (urgent): Needs immediate attention`
 
-    const response = await fetch(GEMINI_URL, {
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
+    console.log("Calling Gemini API...")
+
+    const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY,
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
@@ -61,13 +72,23 @@ Urgency guidelines:
     })
 
     const data = await response.json()
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    console.log("Gemini response status:", response.status)
+    console.log("Gemini response:", JSON.stringify(data))
 
-    // Clean and parse JSON
+    if (!response.ok) {
+      console.error("Gemini API error:", JSON.stringify(data))
+      return new Response(
+        JSON.stringify({ error: "Gemini API error", details: data }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    console.log("Gemini text:", responseText)
+
     const cleaned = responseText.replace(/```json\n?|```\n?/g, "").trim()
     const parsed = JSON.parse(cleaned)
 
-    // Validate fields
     const validCategories = ["trash", "dishes", "bathroom", "kitchen", "grocery", "general"]
     const validLocations = ["kitchen", "bathroom", "living room", "bedroom", "hallway", "outside", "general"]
 
@@ -79,14 +100,16 @@ Urgency guidelines:
       location: validLocations.includes(parsed.location) ? parsed.location : "general",
     }
 
+    console.log("Parsed fix:", JSON.stringify(fix))
+
     return new Response(
       JSON.stringify(fix),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   } catch (error) {
-    console.error("Parse error:", error)
+    console.error("Parse error:", error.message, error.stack)
     return new Response(
-      JSON.stringify({ error: "Failed to parse fix" }),
+      JSON.stringify({ error: "Failed to parse fix", message: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   }
